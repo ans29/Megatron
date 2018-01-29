@@ -3,8 +3,9 @@ from collections import defaultdict #for multimap
 import ReadMetadata as readM
 import ReadData as readD
 import ParserFile as parser
+import End 
 
-
+End.happy_start()
 #======== METADATA ===================================
 table_names = defaultdict(list)  #MULTIMAP
 readM.read_metadata(table_names)
@@ -43,16 +44,6 @@ for (i,requested_col) in enumerate(select_list):
 			select_list[i] = tab + "." + requested_col
 			break;
 
-print ("SELECT" , end = " : ")
-for wrd in select_list:
-	print (wrd, end = " ")
-print ("\nFROM", end = " : ")
-for wrd in from_list:
-	print (wrd, end = " ")
-print ("\nWHERE" , end = " : ")
-for wrd in condition_list:
-	print (wrd, end = " ")
-print (" ")
 #======== DATASTRUCTURE ==============================
 #1. LIST of lists (T1.A[], T2.X[], T2.Y[])
 #2. LIST of multimap,
@@ -71,19 +62,86 @@ if len(condition_list) == 0:
 	condition_list.append("1=1;")
 
 condition_list[-1] = condition_list[-1].rstrip(';')
-print ("=====WHERE : ======")
-or_list = []
-or_part = []
-flag = 0
-for conds in condition_list:
-	if conds == "or":
-		new_list = or_part[:]
-		or_list.append(new_list)
-		or_part.clear()
-	else:
-		or_part.append(conds)
 
-or_list.append(or_part)
-print ("  OR LIST: ")
-for or_pt in or_list:
-	print (or_pt)
+print ("SELECT" , end = " : ")
+for wrd in select_list:
+	print (wrd, end = " ")
+print ("\nFROM", end = " : ")
+for wrd in from_list:
+	print (wrd, end = " ")
+print ("\nWHERE" , end = " : ")
+for wrd in condition_list:
+	print (wrd, end = " ")
+print (" ")
+
+
+#============= QUERY HANDLING ======================
+print ("===== QUERY HANDLING ======")
+print ("select_list[0] = " + select_list[0])
+if "*" in select_list[0]: #may need where comditions
+	print ("\n")
+	exit()
+
+#============ 2.Trivial AGGREGATES ================	
+if "max" in select_list[0]:
+	tablename = str(from_list[0]) + "." +str(select_list[0][4:-1])
+	print ("Max (" + tablename + ") ")
+	print (max (main_db_list [tablename]))
+	print()
+	exit()
+	
+if "min" in select_list[0]:
+	tablename = str(from_list[0]) + "." +str(select_list[0][4:-1])
+	print ("Min (" + tablename + ") ")
+	print (min (main_db_list [tablename]))
+	print()
+	exit()
+	
+if "avg" in select_list[0]:
+	tablename = str(from_list[0]) + "." +str(select_list[0][4:-1])
+	print ("Avg (" + tablename + ") ")
+	print (float (sum(main_db_list [tablename]))/ float(len(main_db_list [tablename])))
+	print()
+	exit()
+	
+if "sum" in select_list[0]:
+	tablename = str(from_list[0]) + "." +str(select_list[0][4:-1])
+	print ("Sum (" + tablename + ") ")
+	print (sum (main_db_list [tablename]))
+	print ("")
+	exit()
+	
+
+
+
+#========== 4.DISTINCT ============================
+if "distinct" in select_list[0]: #using set
+	prev_size = 0
+	new_size = 0
+	ans_set = set()
+	index_set = set()
+	
+	for (i,val) in enumerate (main_db_list [select_list[1]] ):
+		prev_size = len(ans_set)
+		ans_set.add(val)
+		new_size = len(ans_set)
+		
+		if (prev_size != new_size):
+			index_set.add(i)
+
+	for tab in select_list[1:]:
+		print (tab, end = "|")
+	print ("")
+	for tab in select_list[1:]:
+		print ("========", end = "|")
+	print("")
+	
+
+	for i in index_set:
+		for tab in select_list[1:]:
+			print (main_db_list [tab][i], end = " \t|")
+		print ("")
+	print ("\n")
+	exit()
+	#End.happy_exit()
+#========= 3.MULTI COL FROM MULTI TAB ============

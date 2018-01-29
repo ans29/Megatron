@@ -13,12 +13,13 @@ def read (table_names, main_db_list, main_db_multimap):
 		for sublist in listx:
 			count += 1
 			for item, col in zip(sublist, table_names[table]):
-				key = table+"."+col
+				key = table+"."+ col.lower()
 			#INSERT IN LIST
 				main_db_list [key].append(item)
 			#INSERT IN MAP
 			#	main_db_multimap [key][item] = count
-
+	for d in main_db_list:
+		main_db_list[d] = [int(x) for x in main_db_list[d]]
 
 	#for d in main_db_list:
 	#	print (d+ ": "+ str(main_db_list[d]))
