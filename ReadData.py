@@ -20,5 +20,5 @@ def read (table_names, main_db_list, main_db_multimap):
 			#	main_db_multimap [key][item] = count
 
 
-	for d in main_db_list:
-		print (d+ ": "+ str(main_db_list[d]))
+	#for d in main_db_list:
+	#	print (d+ ": "+ str(main_db_list[d]))
