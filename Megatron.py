@@ -4,6 +4,9 @@ import ReadMetadata as readM
 import ReadData as readD
 import ParserFile as parser
 import End 
+import numpy
+import itertools
+
 
 End.happy_start()
 #======== METADATA ===================================
@@ -22,7 +25,7 @@ print ("\n\n==== col err ====")
 for requested_col in select_list:
 	print (requested_col)
 	count = 0
-	for tab in table_names:
+	for tab in table_names: #from_list
 		#if re.match('hello[0-9]+', 'hello1'): #REGEX
 		if ((requested_col in map(str.lower, table_names[tab]))):# or (re.match(requested_col in map(str.lower, table_names[tab]))): ERR HANDLING REAAINS
 			count += 1
@@ -42,6 +45,11 @@ for (i,requested_col) in enumerate(select_list):
 	for tab in table_names:
 		if ((requested_col in map(str.lower, table_names[tab]))):
 			select_list[i] = tab + "." + requested_col
+			break;
+for (i,requested_col) in enumerate(condition_list):
+	for tab in table_names:
+		if ((requested_col in map(str.lower, table_names[tab]))):
+			condition_list[i] = tab + "." + requested_col
 			break;
 
 #======== DATASTRUCTURE ==============================
@@ -78,9 +86,6 @@ print (" ")
 #============= QUERY HANDLING ======================
 print ("===== QUERY HANDLING ======")
 print ("select_list[0] = " + select_list[0])
-if "*" in select_list[0]: #may need where comditions
-	print ("\n")
-	exit()
 
 #============ 2.Trivial AGGREGATES ================	
 if "max" in select_list[0]:
@@ -130,18 +135,73 @@ if "distinct" in select_list[0]: #using set
 			index_set.add(i)
 
 	for tab in select_list[1:]:
-		print (tab, end = "|")
+		print (tab, end = ",")
 	print ("")
-	for tab in select_list[1:]:
-		print ("========", end = "|")
-	print("")
 	
-
 	for i in index_set:
 		for tab in select_list[1:]:
-			print (main_db_list [tab][i], end = " \t|")
+			print (main_db_list [tab][i], end = ",")
 		print ("")
 	print ("\n")
 	exit()
 	#End.happy_exit()
+
+#========= 1.ALL ============
+
+if "*" in select_list[0]: #may need where comditions
+	print (from_list)
+	replacing_list = []
+	for tab in from_list: 
+		for col in table_names[tab]:
+			replacing_list.append(tab+"."+col.lower())
+	select_list = replacing_list[:]
+	print (select_list)
+	print ("\n")
+	
+
 #========= 3.MULTI COL FROM MULTI TAB ============
+select_list.sort()
+print (select_list)
+ans_meta = defaultdict (list)
+
+
+tab_col = []
+for val in select_list:
+	tab_col = [val.split(".")]
+	ans_meta[tab_col[0][0]].append(tab_col[0][1])
+
+for d in ans_meta:
+	print (d+ ": "+ str(ans_meta[d]))
+
+print (" ==--==")
+ans_data = []
+#creating first table
+first_table = ""
+for tabNm in ans_meta:
+	first_table = tabNm
+	for (i,colnm) in enumerate(ans_meta[tabNm]):
+		idf = (tabNm + "." + colnm)
+		ans_data.append(list(main_db_list[idf]))
+	break
+#repeating values xN times 
+size_of_before_table = 0
+for tab in ans_meta:
+	if tab != first_table:
+		size_of_before_table = len(ans_data[0])
+		idf = (tab+ "." + ans_meta[tab][0])
+		for (i,ans_col) in enumerate (ans_data):
+			ans_data[i] = (numpy.repeat (ans_col,len(main_db_list[idf])) )
+#appending new cols
+		for col in ans_meta[tab]:
+			idf = (tab + "." + col)
+			ans_data.append(main_db_list[idf]*size_of_before_table)
+
+for col in select_list:
+	print (col, end = ",")
+print ("")
+
+for i in range(len(ans_data[0])):
+	for (j,col) in enumerate(select_list):
+		print (ans_data[j][i], end = ",")
+	print("")
+print ("\n")
