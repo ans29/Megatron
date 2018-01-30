@@ -46,11 +46,15 @@ for (i,requested_col) in enumerate(select_list):
 		if ((requested_col in map(str.lower, table_names[tab]))):
 			select_list[i] = tab + "." + requested_col
 			break;
+
+#conds = condition_list.split('=')
+#condition_list = (" = ".join(conds))
 for (i,requested_col) in enumerate(condition_list):
 	for tab in table_names:
 		if ((requested_col in map(str.lower, table_names[tab]))):
 			condition_list[i] = tab + "." + requested_col
 			break;
+
 
 #======== DATASTRUCTURE ==============================
 #1. LIST of lists (T1.A[], T2.X[], T2.Y[])
@@ -67,7 +71,7 @@ readD.read(table_names, main_db_list, main_db_multimap)
 #======== WHERE ======================================
 if len(condition_list) == 0:
 	from_list[-1] = from_list[-1].rstrip(';')
-	condition_list.append("1=1;")
+	condition_list.append("True;")
 
 condition_list[-1] = condition_list[-1].rstrip(';')
 
@@ -200,8 +204,32 @@ for col in select_list:
 	print (col, end = ",")
 print ("")
 
+print_list = []
+check_list = []
+eval_list = condition_list
+print_flag = 0
+for (i,cond) in enumerate(eval_list):
+	if cond == "=":
+		eval_list[i] = "=="
+
 for i in range(len(ans_data[0])):
+	#evalRun
+	check_list = eval_list
+	print_flag = 0
 	for (j,col) in enumerate(select_list):
-		print (ans_data[j][i], end = ",")
-	print("")
-print ("\n")
+		if col in check_list:
+			for (z,chck) in enumerate(check_list):
+				print (col," ` ", chck)
+				if col==chck:
+					check_list[z] = str(ans_data[j][i])
+					print (check_list)
+					try:
+						if (eval (" ".join(check_list))):
+							print_flag = 1 
+					except Exception as e:
+						print_flag = 0
+	#print run
+	if(print_flag == 1):
+		for (j,col) in enumerate(select_list):
+			print (ans_data[j][i], end = ",")
+		print("")
